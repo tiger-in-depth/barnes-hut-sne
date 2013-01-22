@@ -1,0 +1,1 @@
+g++ quadtree.cpp tsne.cpp -o bh_tsne -O3 -I/System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/Headers -lcblas
