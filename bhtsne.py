@@ -50,7 +50,7 @@ BH_TSNE_BIN_PATH = path_join(dirname(__file__), 'bh_tsne')
 assert isfile(BH_TSNE_BIN_PATH), ('Unable to find the bh_tsne binary in the '
     'same directory as this script, have you forgotten to compile it?: {}'
     ).format(BH_TSNE_BIN_PATH)
-# Default hyper-parameter values from Maaten (2013)
+# Default hyper-parameter values from van der Maaten (2013)
 DEFAULT_PERPLEXITY = 30.0
 DEFAULT_THETA = 0.5
 ###
