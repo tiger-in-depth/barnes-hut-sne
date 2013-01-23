@@ -23,7 +23,7 @@ Author:     Pontus Stenetorp    <pontus stenetorp se>
 Version:    2013-01-22
 '''
 
-# Copyright (c) 2012, Pontus Stenetorp <pontus stenetorp se>
+# Copyright (c) 2013, Pontus Stenetorp <pontus stenetorp se>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
