@@ -51,8 +51,8 @@ function mappedX = fast_tsne(X, initial_dims, perplexity, theta)
     tic, system('./bh_tsne'); toc
     [mappedX, landmarks, costs] = read_data;   
     landmarks = landmarks + 1;              % correct for Matlab indexing
-    %delete('data.dat');
-    %delete('result.dat');
+    delete('data.dat');
+    delete('result.dat');
 end
 
 
@@ -76,7 +76,8 @@ function [X, landmarks, costs] = read_data
 	d = fread(h, 1, 'integer*4');
 	X = fread(h, n * d, 'double');
     landmarks = fread(h, n, 'integer*4');
-    costs = fread(h, n, 'double');
+    landmarks = landmarks + 1;
+    costs = fread(h, n, 'double');      % this vector contains only zeros
     X = reshape(X, [d n])';
 	fclose(h);
 end

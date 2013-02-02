@@ -1,3 +1,4 @@
+echo "Make sure to change the path to CBLAS in this file before running it!"
 # On Ubuntu 12.10 the below paths are -I/usr/include/ -L/usr/lib/ and you need
 #   to have the libatlas-base-dev package installed
 g++ quadtree.cpp tsne.cpp -o bh_tsne -O3 -I./CBLAS/include -L./ -lcblas

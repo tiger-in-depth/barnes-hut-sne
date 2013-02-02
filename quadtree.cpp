@@ -147,6 +147,17 @@ bool QuadTree::insert(int new_index)
         return true;
     }
     
+    // Don't add duplicates for now (this is not very nice)
+    bool any_duplicate = false;
+    for(int n = 0; n < size; n++) {
+        bool duplicate = true;
+        for(int d = 0; d < QT_NO_DIMS; d++) {
+            if(point[d] != data[index[n] * QT_NO_DIMS + d]) { duplicate = false; break; }
+        }
+        any_duplicate = any_duplicate | duplicate;
+    }
+    if(any_duplicate) return true;
+    
     // Otherwise, we need to subdivide the current cell
     if(is_leaf) subdivide();
     

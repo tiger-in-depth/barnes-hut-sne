@@ -9,7 +9,6 @@
 
 #include <math.h>
 #include <float.h>
-#include <cblas.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <cstring>
@@ -17,6 +16,10 @@
 #include "quadtree.h"
 #include "vptree.h"
 #include "tsne.h"
+
+extern "C" {
+    #include <cblas.h>
+}
 
 
 using namespace std;
