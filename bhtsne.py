@@ -53,6 +53,8 @@ assert isfile(BH_TSNE_BIN_PATH), ('Unable to find the bh_tsne binary in the '
 # Default hyper-parameter values from van der Maaten (2013)
 DEFAULT_PERPLEXITY = 30.0
 DEFAULT_THETA = 0.5
+METRICS_EUCLIDEAN = 0
+METRICS_LOG_COSINE = 1
 ###
 
 def _argparse():
@@ -61,7 +63,7 @@ def _argparse():
             default=DEFAULT_PERPLEXITY)
     # 0.0 for theta is equivalent to vanilla t-SNE
     argparse.add_argument('-t', '--theta', type=float, default=DEFAULT_THETA)
-
+    argparse.add_argument('-m', '--metrics', type=int, default=METRICS_LOG_COSINE)
     argparse.add_argument('-v', '--verbose', action='store_true')
     argparse.add_argument('-i', '--input', type=FileType('r'), default=stdin)
     argparse.add_argument('-o', '--output', type=FileType('w'),
@@ -81,12 +83,12 @@ class TmpDir:
 def _read_unpack(fmt, fh):
     return unpack(fmt, fh.read(calcsize(fmt)))
 
-def bh_tsne(samples, perplexity=DEFAULT_PERPLEXITY, theta=DEFAULT_THETA,
+def bh_tsne(samples, metrics, perplexity=DEFAULT_PERPLEXITY, theta=DEFAULT_THETA,
         verbose=False):
     # Assume that the dimensionality of the first sample is representative for
     #   the whole batch
-    sample_dim = len(samples[0])
-    sample_count = len(samples)
+    sample_dim = samples.shape[0]
+    sample_count = samples.shape[1]
 
     # bh_tsne works with fixed input and output paths, give it a temporary
     #   directory to work in so we don't clutter the filesystem
@@ -98,12 +100,13 @@ def bh_tsne(samples, perplexity=DEFAULT_PERPLEXITY, theta=DEFAULT_THETA,
             data_file.write(pack('iidd', sample_count, sample_dim, theta,
                 perplexity))
             # Then write the data
-            for sample in samples:
+            for ind in xrange(samples.shape[1]):
+                sample = samples[:, ind].tolist()
                 data_file.write(pack('{}d'.format(len(sample)), *sample))
 
         # Call bh_tsne and let it do its thing
         with open('/dev/null', 'w') as dev_null:
-            bh_tsne_p = Popen((abspath(BH_TSNE_BIN_PATH), ), cwd=tmp_dir_path,
+            bh_tsne_p = Popen([abspath(BH_TSNE_BIN_PATH), str(metrics)], cwd=tmp_dir_path,
                     # bh_tsne is very noisy on stdout, tell it to use stderr
                     #   if it is to print any output
                     stdout=stderr if verbose else dev_null)
@@ -133,24 +136,11 @@ def bh_tsne(samples, perplexity=DEFAULT_PERPLEXITY, theta=DEFAULT_THETA,
 
 def main(args):
     argp = _argparse().parse_args(args[1:])
-
+    import cPickle
     # Read the data, with some sanity checking
-    data = []
-    for sample_line_num, sample_line in enumerate((l.rstrip('\n')
-            for l in argp.input), start=1):
-        sample_data = sample_line.split('\t')
-        try:
-            assert len(sample_data) == dims, ('Input line #{} of '
-                    'dimensionality {} although we have previously observed '
-                    'lines with dimensionality {}, possible data error or is '
-                    'the data sparsely encoded?'
-                    ).format(sample_line_num, len(sample_data), dims)
-        except NameError:
-            # First line, record the dimensionality
-            dims = len(sample_data)
-        data.append([float(e) for e in sample_data])
+    data = cPickle.load(argp.input)
 
-    for result in bh_tsne(data, perplexity=argp.perplexity, theta=argp.theta,
+    for result in bh_tsne(data, argp.metrics, perplexity=argp.perplexity, theta=argp.theta,
             verbose=argp.verbose):
         argp.output.write('{}\t{}\n'.format(*result))
 

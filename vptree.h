@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <queue>
 #include <limits>
-
+#include <math.h>
 
 #ifndef VPTREE_H
 #define VPTREE_H
@@ -62,14 +62,21 @@ public:
 };
 
 
-double euclidean_distance(const DataPoint &t1, const DataPoint &t2) {
-    double dd = .0;
-    for(int d = 0; d < t1.dimensionality(); d++) dd += (t1.x(d) - t2.x(d)) * (t1.x(d) - t2.x(d));
-    return dd;
+double euclidean_distance(const DataPoint& x1, const DataPoint& x2) {
+  double dd = .0;
+  for(int d = 0; d < x1.dimensionality(); d++) dd += (x1.x(d) - x2.x(d)) * (x1.x(d) - x2.x(d));
+  return dd;
 }
 
+double log_cosine_distance(const DataPoint& x1, const DataPoint& x2) {
+  double cosine = .0;
+  for(int d = 0; d < x1.dimensionality(); d++) {
+    cosine += x1.x(d) * x2.x(d);
+  }
+  return abs(log(cosine + 1.0e-4));
+}
 
-template<typename T, double (*distance)( const T&, const T& )>
+template<double (*distance)(const DataPoint&, const DataPoint&)>
 class VpTree
 {
 public:
@@ -83,14 +90,14 @@ public:
     }
 
     // Function to create a new VpTree from data
-    void create(const std::vector<T>& items) {
+    void create(const std::vector<DataPoint>& items) {
         delete _root;
         _items = items;
         _root = buildFromPoints(0, items.size());
     }
     
     // Function that uses the tree to find the k nearest neighbors of target
-    void search(const T& target, int k, std::vector<T>* results, std::vector<double>* distances)
+    void search(const DataPoint& target, int k, std::vector<DataPoint>* results, std::vector<double>* distances)
     {
         
         // Use a priority queue to store intermediate results on
@@ -116,7 +123,7 @@ public:
     }
     
 private:
-    std::vector<T> _items;
+    std::vector<DataPoint> _items;
     double _tau;
     
     // Single node of a VP tree (has a point and radius; left children are closer to point than the radius)
@@ -151,10 +158,10 @@ private:
     // Distance comparator for use in std::nth_element
     struct DistanceComparator
     {
-        const T& item;
-        DistanceComparator(const T& item) : item(item) {}
-        bool operator()(const T& a, const T& b) {
-            return distance(item, a) < distance(item, b);
+        const DataPoint& item;
+        DistanceComparator(const DataPoint& item) : item(item) {}
+        bool operator()(const DataPoint& a, const DataPoint& b) {
+	  return distance(item, a) < distance(item, b);
         }
     };
     
@@ -196,7 +203,7 @@ private:
     }
     
     // Helper function that searches the tree    
-    void search(Node* node, const T& target, int k, std::priority_queue<HeapItem>& heap)
+    void search(Node* node, const DataPoint& target, int k, std::priority_queue<HeapItem>& heap)
     {
         if(node == NULL) return;     // indicates that we're done here
         
